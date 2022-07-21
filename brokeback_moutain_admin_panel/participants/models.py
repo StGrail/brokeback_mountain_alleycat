@@ -16,6 +16,7 @@ class Participant(models.Model):
         help_text='запрещенная организация на территории Российской Федерации',
         blank=True,
     )
+    tg_chat_id = models.CharField(verbose_name='Id чата для telegram', max_length=255, null=True)
     registration_date = models.DateTimeField(verbose_name='Время регистрации', auto_now_add=True)
 
     class Meta:

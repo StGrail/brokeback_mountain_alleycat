@@ -8,6 +8,7 @@ authors = ["G"]
 python = "^3.10"
 Django = "^4.0.6"
 aiogram = "^2.21"
+python-dotenv = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
 

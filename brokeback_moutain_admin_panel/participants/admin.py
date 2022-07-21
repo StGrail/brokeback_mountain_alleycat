@@ -9,6 +9,7 @@ class ParticipantAdmin(admin.ModelAdmin):
         'name',
         'category',
         'instagram',
+        'tg_chat_id',
     )
     list_display = (
         'name',
@@ -19,3 +20,6 @@ class ParticipantAdmin(admin.ModelAdmin):
         'category',
     )
     ordering = ('-registration_date',)
+    readonly_fields = (
+        'tg_chat_id',
+    )
