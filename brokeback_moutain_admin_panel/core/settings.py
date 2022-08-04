@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     # apps
     'participants.apps.ParticipantsConfig',
     'geo_points.apps.GeoPointsConfig',
-    'race.RaceConfig',
+    'race.apps.RaceConfig',
     # packages
 ]
 

@@ -151,6 +151,18 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "pillow"
+version = "9.2.0"
+description = "Python Imaging Library (Fork)"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-issues (>=3.0.1)", "sphinx-removed-in", "sphinxext-opengraph"]
+tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
+
+[[package]]
 name = "python-dotenv"
 version = "0.20.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -200,7 +212,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d846d2328a0c59163656b0802a727214ccc4ed34dac44828ffad96323824d18c"
+content-hash = "ec9a47dccde3c84779259bf423b6be7aa74ccf5e75cd183d658764ba5c871dc7"
 
 [metadata.files]
 aiogram = []
@@ -216,6 +228,7 @@ django = []
 frozenlist = []
 idna = []
 multidict = []
+pillow = []
 python-dotenv = []
 pytz = []
 sqlparse = []

@@ -1,11 +1,13 @@
 from django.db import models
 
+from participants.models import Participant
+
 
 class Race(models.Model):
     """Модель гонки"""
 
     participant = models.ForeignKey(
-        'partisipants.Partisipant', verbose_name='Участник', on_delete=models.CASCADE
+        Participant, verbose_name='Участник', on_delete=models.CASCADE
     )
     time_of_start = models.DateTimeField('Время старта', blank=True)
     time_of_finish = models.DateTimeField('Время финиша', blank=True)
