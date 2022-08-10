@@ -11,6 +11,7 @@ class Race(models.Model):
     )
     time_of_start = models.DateTimeField('Время старта', blank=True)
     time_of_finish = models.DateTimeField('Время финиша', blank=True)
+    time_of_race = models.DateTimeField('Время, затраченное на гонку', default=None, null=True, blank=True)
     place = models.SmallIntegerField('Место в общем зачёте', default=0)
     place_in_category = models.PositiveSmallIntegerField('Место в категории', default=0)
     points = models.ManyToManyField(
