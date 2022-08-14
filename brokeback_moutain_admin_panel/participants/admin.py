@@ -12,6 +12,7 @@ class ParticipantAdmin(admin.ModelAdmin):
         "tg_chat_id",
     )
     list_display = (
+        "tg_chat_id",
         "name",
         "category",
         "registration_date",

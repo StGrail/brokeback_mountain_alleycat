@@ -6,7 +6,7 @@ from participants.constants import CATEGORY_CHOICES
 class Participant(models.Model):
     """Модель участника гонки"""
 
-    name = models.CharField(verbose_name="Имя", max_length=64)
+    name = models.CharField(verbose_name="Имя", max_length=64, blank=True)
     category = models.IntegerField(
         verbose_name="Категория", choices=CATEGORY_CHOICES, default=0
     )
@@ -28,4 +28,4 @@ class Participant(models.Model):
         verbose_name_plural = "Участники"
 
     def __str__(self):
-        return self.name
+        return str(self.name) if self.name else str(self.tg_chat_id)
