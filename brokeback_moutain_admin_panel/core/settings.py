@@ -44,9 +44,14 @@ INSTALLED_APPS = [
     "participants.apps.ParticipantsConfig",
     "geo_points.apps.GeoPointsConfig",
     "race.apps.RaceConfig",
+    "bot_settings.apps.BotSettingsConfig",
     # packages
     "rest_framework",
     "django_extensions",
+    "djrichtextfield",
+    "solo",
+    "ckeditor",
+    "ckeditor_uploader",
 ]
 
 MIDDLEWARE = [
@@ -109,9 +114,60 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"]
+REST_FRAMEWORK = {"DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"]}
+
+# django-richtextfield
+# DJRICHTEXTFIELD_CONFIG = {
+#     'js': ['//cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js'],
+#     'init_template': 'djrichtextfield/init/tinymce.js',
+#     'settings': {
+#         'menubar': False,
+#         'plugins': 'link image',
+#         'toolbar': 'bold italic | link image | removeformat',
+#         'width': 700
+#     }
+# }
+
+# Django CKEditor
+
+CKEDITOR_UPLOAD_PATH = 'embedded'
+
+CKEDITOR_IMAGE_BACKEND = 'pillow'
+
+CKEDITOR_CONFIGS = {
+    "default": {
+        "removePlugins": "stylesheetparser",
+        'allowedContent': True,
+        'skin': 'moono-lisa',
+        'toolbar_Basic': [['Source', '-', 'Bold', 'Italic']],
+        'toolbar_Full': [
+            [
+                'Styles',
+                'Format',
+                'Bold',
+                'Italic',
+                'Underline',
+                'Strike',
+                'SpellChecker',
+                'Undo',
+                'Redo',
+            ],
+            ['Link', 'Unlink', 'Anchor'],
+            ['Outdent', 'Indent'],
+            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['Image', 'Table', 'HorizontalRule', 'NumberedList', 'BulletedList'],
+            ['TextColor', 'BGColor'],
+            ['Smiley', 'SpecialChar'],
+            ['Source'],
+        ],
+        'toolbar': 'Full',
+        'height': 291,
+        'width': 835,
+        'filebrowserWindowWidth': 940,
+        'filebrowserWindowHeight': 725,
+    }
 }
+
 
 
 # Internationalization

@@ -1,6 +1,6 @@
 import asyncio
 
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import executor
 
 from config.utils import dp
 from handlers.admins_info import on_startup_notify_admin

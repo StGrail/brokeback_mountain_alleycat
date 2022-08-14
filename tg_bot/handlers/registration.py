@@ -2,11 +2,16 @@ from aiogram import types, filters
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 
+from api_requests.bot_settings import (
+    get_disclaimer_from_db,
+    get_welcome_message_from_db, get_message_after_registration_from_db,
+)
 from api_requests.registration import (
     create_participant_in_db,
     update_participant_in_db,
     get_participant_data_in_db,
 )
+from config.settings import DEBUG
 from config.utils import dp
 from constants import CategoriesEnums
 from keyboards.registration import RegistrationKeyboards
@@ -19,33 +24,31 @@ async def send_welcome(message: types.Message) -> None:
 
     tg_chat_id = message.from_user.id
     is_new = await create_participant_in_db(tg_chat_id=tg_chat_id)
-    if is_new:
-        # welcome_message = get_welcome_message_from_db()  # TODO
-        welcome_message = 'WELCOME MESSAGE TEXT'
+    if not is_new:
+        welcome_message = await get_welcome_message_from_db() if not DEBUG else 'WELCOME MESSAGE TEXT'
         await message.reply(
             f'Добро пожаловать, {welcome_message}', reply_markup=RegistrationKeyboards.show_disclaimer
         )
-        await RegistrationFormStates.next()
-    user_data_from_db = await get_participant_data_in_db(tg_chat_id=tg_chat_id)
-    name = user_data_from_db.get('name')
-    category = CategoriesEnums.labels.value.get(user_data_from_db.get('category'))
-    instagram = user_data_from_db.get('instagram')
-    await message.answer(
-        f'Вы уже зарегистрированы.\n'
-        f'Проверьте, правильно ли записаны данные:\n\n'
-        f'имя - {name}\n'
-        f'категория - {category}\n'
-        f'instagram - {instagram}',
-        reply_markup=RegistrationKeyboards.is_data_correct,
-    )
-    await RegistrationFormStates.check_data.set()
+    else:
+        user_data_from_db = await get_participant_data_in_db(tg_chat_id=tg_chat_id)
+        name = user_data_from_db.get('name')
+        category = CategoriesEnums.labels.value.get(user_data_from_db.get('category'))
+        instagram = user_data_from_db.get('instagram')
+        await message.answer(
+            f'Вы уже зарегистрированы.\n'
+            f'Проверьте, правильно ли записаны данные:\n\n'
+            f'имя - {name}\n'
+            f'категория - {category}\n'
+            f'instagram - {instagram}',
+            reply_markup=RegistrationKeyboards.is_data_correct,
+        )
+        await RegistrationFormStates.check_data.set()
 
 
 @dp.callback_query_handler(text='disclaimer_message')
 async def read_disclaimer(call: CallbackQuery) -> None:
 
-    # disclaimer_text = get_disclaimer_from_db()  # TODO
-    disclaimer_text = 'DISCLAIMER TEXT'
+    disclaimer_text = await get_disclaimer_from_db() if not DEBUG else 'DISCLAIMER TEXT'
     await call.message.delete()
     await call.message.answer(
         f'{disclaimer_text}', reply_markup=RegistrationKeyboards.start_registration
@@ -56,6 +59,8 @@ async def read_disclaimer(call: CallbackQuery) -> None:
 @dp.callback_query_handler(state=RegistrationFormStates.start_registration)
 async def start_registration(call: CallbackQuery) -> None:
 
+    await call.answer(cache_time=1)
+    await call.message.delete_reply_markup()
     await call.message.answer(text=f'Напишите своё имя')
     await RegistrationFormStates.next()
 
@@ -120,8 +125,7 @@ async def data_ok(call: CallbackQuery, state: FSMContext) -> None:
     await update_participant_in_db(tg_chat_id=tg_chat_id, user_data=user_data)
     await state.reset_data()
     await state.reset_state()
-    # message_text = get_message_after_registration_from_db()  # TODO
-    message_text = 'регистрация прошла успешно, ждём нас старте <время, место место старта>'
+    message_text = await get_message_after_registration_from_db() if not DEBUG else 'Регистрация прошла успешно'
     await call.message.edit_reply_markup()
     await call.message.answer(text=f'{message_text}')
 

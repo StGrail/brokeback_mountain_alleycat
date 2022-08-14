@@ -11,6 +11,7 @@ from core.routers import router
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
+    path('djrichtextfield/', include('djrichtextfield.urls'))
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

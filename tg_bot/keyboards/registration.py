@@ -17,8 +17,6 @@ class RegistrationKeyboards:
             [
                 InlineKeyboardButton('Ок ✔️', callback_data='start_registration'),
                 InlineKeyboardButton('Скинуть инвайт ковбою', switch_inline_query=invite_to_bot),
-                # TODO
-                # InlineKeyboardButton('Скинуть инвайт ковбою', switch_inline_query=get_send_invite_text_from_db()),
             ],
         ],
     )

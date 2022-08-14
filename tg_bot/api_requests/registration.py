@@ -27,7 +27,7 @@ async def create_participant_in_db(tg_chat_id: int) -> bool:
 
 async def update_participant_in_db(tg_chat_id: int, user_data: dict) -> bool:
     """
-    POST запрос в API на обновление участника
+    PATCH запрос в API на обновление участника
     :param tg_chat_id: tg id пользователя
     :param user_data: данные пользователя
     :return: статус обновления
@@ -46,7 +46,7 @@ async def update_participant_in_db(tg_chat_id: int, user_data: dict) -> bool:
 
 async def get_participant_data_in_db(tg_chat_id: int) -> Union[dict, None]:
     """
-    POST запрос в API на получение данных участника
+    GET запрос в API на получение данных участника
     :param tg_chat_id: tg id пользователя
     :return: словарь с данными пользователя
     :return: None, если данных нет
