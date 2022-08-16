@@ -17,8 +17,6 @@ async def get_welcome_message_from_db() -> str:
             resp_status = resp.status
             if resp_status == status.HTTP_200_OK:
                 data = await resp.json()
-                print(data)
-                print(data[0])
                 welcome_message = data[0].get('welcome_message', 'Нет welcome message')
                 return welcome_message
             return 'Нет welcome message'
@@ -36,8 +34,6 @@ async def get_disclaimer_from_db() -> str:
             resp_status = resp.status
             if resp_status == status.HTTP_200_OK:
                 data = await resp.json()
-                print(data)
-                print(data[0])
                 race_disclaimer = data[0].get('race_disclaimer', 'Нет дисклеймера')
                 return race_disclaimer
             return 'Нет дисклеймера'
@@ -55,7 +51,6 @@ async def get_message_after_registration_from_db() -> str:
             resp_status = resp.status
             if resp_status == status.HTTP_200_OK:
                 data = await resp.json()
-                print(data)
                 after_reg_message = data[0].get(
                     'after_reg_message', 'Нет сообщения после регистрации в боте'
                 )

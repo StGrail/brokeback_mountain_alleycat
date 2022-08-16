@@ -1,16 +1,16 @@
-from ckeditor.fields import RichTextField
+from django.db import models
 from solo.models import SingletonModel
 
 
 class RegistrationTexts(SingletonModel):
-    welcome_message = RichTextField(
+    welcome_message = models.TextField(
         'Welcome message', help_text='Отправляем при первом входе в бота'
     )
-    race_disclaimer = RichTextField(
+    race_disclaimer = models.TextField(
         'Дисклеймер перед регистрацией',
         help_text='Можно указать примерную инфу о механике гонки/соглашение, что никто не несет ответсвенность',
     )
-    after_reg_message = RichTextField(
+    after_reg_message = models.TextField(
         'Сообщение после регистрации', help_text='Можно указать информацию о месте и времени сбора'
     )
 

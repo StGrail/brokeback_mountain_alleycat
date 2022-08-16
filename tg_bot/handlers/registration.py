@@ -2,9 +2,10 @@ from aiogram import types, filters
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 
-from api_requests.bot_settings import (
+from api_requests.text_messages import (
     get_disclaimer_from_db,
-    get_welcome_message_from_db, get_message_after_registration_from_db,
+    get_welcome_message_from_db,
+    get_message_after_registration_from_db,
 )
 from api_requests.registration import (
     create_participant_in_db,
@@ -24,10 +25,13 @@ async def send_welcome(message: types.Message) -> None:
 
     tg_chat_id = message.from_user.id
     is_new = await create_participant_in_db(tg_chat_id=tg_chat_id)
-    if not is_new:
-        welcome_message = await get_welcome_message_from_db() if not DEBUG else 'WELCOME MESSAGE TEXT'
+    if is_new:
+        welcome_message = (
+            await get_welcome_message_from_db() if not DEBUG else 'WELCOME MESSAGE TEXT'
+        )
         await message.reply(
-            f'Добро пожаловать, {welcome_message}', reply_markup=RegistrationKeyboards.show_disclaimer
+            f'Добро пожаловать, {welcome_message}',
+            reply_markup=RegistrationKeyboards.show_disclaimer,
         )
     else:
         user_data_from_db = await get_participant_data_in_db(tg_chat_id=tg_chat_id)
@@ -76,7 +80,8 @@ async def input_name(message: types.Message, state: FSMContext) -> None:
     }
     await state.update_data(data=user_data)
     await message.answer(
-        f'Имя - {name}\n\nВыберите категорию:', reply_markup=RegistrationKeyboards.category,
+        f'Имя - {name}\n\nВыберите категорию:',
+        reply_markup=RegistrationKeyboards.category,
     )
     await RegistrationFormStates.next()
 
@@ -91,7 +96,11 @@ async def input_category(call: CallbackQuery, state: FSMContext) -> None:
 
     await call.message.delete_reply_markup()
     await state.update_data(data=user_data)
-    await call.message.edit_text(f'Категория - {category}\n\nУкажи инстаграм, *дисклеймер об инсте')
+    await call.message.edit_text(
+        f'Категория - {category}\n\n'
+        f'Укажи <tg-spoiler>instagram</tg-spoiler>*, '
+        f'чтобы найти себя потом в прошмандовках синглспидсакерc\n\n'
+    )
     await RegistrationFormStates.next()
 
 
@@ -125,7 +134,9 @@ async def data_ok(call: CallbackQuery, state: FSMContext) -> None:
     await update_participant_in_db(tg_chat_id=tg_chat_id, user_data=user_data)
     await state.reset_data()
     await state.reset_state()
-    message_text = await get_message_after_registration_from_db() if not DEBUG else 'Регистрация прошла успешно'
+    message_text = (
+        await get_message_after_registration_from_db()
+    ) if not DEBUG else 'Регистрация прошла успешно'
     await call.message.edit_reply_markup()
     await call.message.answer(text=f'{message_text}')
 
@@ -138,8 +149,3 @@ async def data_error(call: CallbackQuery, state: FSMContext) -> None:
     await state.reset_state()
     await call.answer(cache_time=1)
     await RegistrationFormStates.start_registration.set()
-
-    #TODO
-    '''
-    запросы в бд в настройки гонки из админки 
-    '''
