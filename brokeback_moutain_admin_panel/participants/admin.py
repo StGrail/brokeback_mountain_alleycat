@@ -1,7 +1,10 @@
+import json
+
 from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from bot_settings.keyboards import KEYBOARDS
 from bot_settings.models import CustomMessage
 from bot_settings.services import TelegramApiRequest
 from participants.models import Participant
@@ -47,7 +50,10 @@ class ParticipantAdmin(admin.ModelAdmin):
         chat_ids = self.get_all_participants_tg_chat_ids()
         try:
             message = CustomMessage.objects.first().start_message
-            TelegramApiRequest(chat_ids=chat_ids, message=message).send_message_to_users()
+            keyboard = json.dumps(KEYBOARDS.get('ready_to_race'))
+            TelegramApiRequest(
+                chat_ids=chat_ids, message=message, keyboard=keyboard
+            ).send_message_to_users_with_keyboard()
             messages.add_message(request, messages.SUCCESS, f'Собщение отправлено всем участникам')
         except AttributeError:
             messages.add_message(request, messages.ERROR, f'Заполните поле в админке')
