@@ -30,6 +30,9 @@ DEBUG = os.getenv("DEBUG", False)
 
 ALLOWED_HOSTS = ["*"]
 
+TG_API = 'https://api.telegram.org/'
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 
 # Application definition
 

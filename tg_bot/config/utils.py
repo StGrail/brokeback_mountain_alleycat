@@ -8,6 +8,6 @@ from config import settings
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=settings.TG_SECRET_KEY, parse_mode=types.ParseMode.HTML)
+bot = Bot(token=settings.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
