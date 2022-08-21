@@ -3,7 +3,7 @@ KEYBOARDS = {
         'inline_keyboard': [
             [
                 {
-                    'text': 'Готов начать гонку?',
+                    'text': 'Погнали',
                     'callback_data': 'ready_to_race',
                 }
             ]

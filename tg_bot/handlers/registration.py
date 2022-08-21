@@ -2,6 +2,7 @@ from aiogram import types, filters
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 
+from api_requests.race_requests import get_race_data
 from api_requests.text_messages import (
     get_disclaimer_from_db,
     get_welcome_message_from_db,
@@ -19,34 +20,40 @@ from keyboards.registration import RegistrationKeyboards
 from states.registration_states import RegistrationFormStates
 
 
-@dp.message_handler(filters.CommandStart)
+@dp.message_handler(text='/start')
 async def send_welcome(message: types.Message) -> None:
     """Создаю пользователя и задаю состояние для регистрации"""
 
-    tg_chat_id = message.from_user.id
-    is_new = await create_participant_in_db(tg_chat_id=tg_chat_id)
-    if is_new:
-        welcome_message = (
-            await get_welcome_message_from_db() if not DEBUG else 'WELCOME MESSAGE TEXT'
-        )
-        await message.reply(
-            f'Добро пожаловать, {welcome_message}',
-            reply_markup=RegistrationKeyboards.show_disclaimer,
-        )
+    race_data = await get_race_data()
+    is_race_start = race_data[0].get('is_started')
+    if not is_race_start:
+
+        tg_chat_id = message.from_user.id
+        is_new = await create_participant_in_db(tg_chat_id=tg_chat_id)
+        if is_new:
+            welcome_message = (
+                await get_welcome_message_from_db() if not DEBUG else 'WELCOME MESSAGE TEXT'
+            )
+            await message.reply(
+                f'Добро пожаловать, {welcome_message}',
+                reply_markup=RegistrationKeyboards.show_disclaimer,
+            )
+        else:
+            user_data_from_db = await get_participant_data_in_db(tg_chat_id=tg_chat_id)
+            name = user_data_from_db.get('name')
+            category = CategoriesEnums.labels.value.get(user_data_from_db.get('category'))
+            instagram = user_data_from_db.get('instagram')
+            await message.answer(
+                f'Вы уже зарегистрированы.\n'
+                f'Проверьте, правильно ли записаны данные:\n\n'
+                f'имя - {name}\n'
+                f'категория - {category}\n'
+                f'instagram - {instagram}',
+                reply_markup=RegistrationKeyboards.is_data_correct,
+            )
+            await RegistrationFormStates.check_data.set()
     else:
-        user_data_from_db = await get_participant_data_in_db(tg_chat_id=tg_chat_id)
-        name = user_data_from_db.get('name')
-        category = CategoriesEnums.labels.value.get(user_data_from_db.get('category'))
-        instagram = user_data_from_db.get('instagram')
-        await message.answer(
-            f'Вы уже зарегистрированы.\n'
-            f'Проверьте, правильно ли записаны данные:\n\n'
-            f'имя - {name}\n'
-            f'категория - {category}\n'
-            f'instagram - {instagram}',
-            reply_markup=RegistrationKeyboards.is_data_correct,
-        )
-        await RegistrationFormStates.check_data.set()
+        await message.reply('Гонка уже началась, регистрация закрыта')
 
 
 @dp.callback_query_handler(text='disclaimer_message')
@@ -132,11 +139,12 @@ async def data_ok(call: CallbackQuery, state: FSMContext) -> None:
     tg_chat_id = call.from_user.id
     user_data = await state.get_data()
     await update_participant_in_db(tg_chat_id=tg_chat_id, user_data=user_data)
-    await state.reset_data()
-    await state.reset_state()
+    await state.reset_state(with_data=True)
     message_text = (
-        await get_message_after_registration_from_db()
-    ) if not DEBUG else 'Регистрация прошла успешно'
+        (await get_message_after_registration_from_db())
+        if not DEBUG
+        else 'Регистрация прошла успешно'
+    )
     await call.message.edit_reply_markup()
     await call.message.answer(text=f'{message_text}')
 
@@ -145,7 +153,6 @@ async def data_ok(call: CallbackQuery, state: FSMContext) -> None:
 async def data_error(call: CallbackQuery, state: FSMContext) -> None:
     """Повторяем регистрацию"""
 
-    await state.reset_data()
-    await state.reset_state()
+    await state.reset_state(with_data=True)
     await call.answer(cache_time=1)
     await RegistrationFormStates.start_registration.set()

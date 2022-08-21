@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from django.contrib import admin, messages
 from django.shortcuts import redirect
@@ -8,6 +9,7 @@ from bot_settings.keyboards import KEYBOARDS
 from bot_settings.models import CustomMessage
 from bot_settings.services import TelegramApiRequest
 from participants.models import Participant
+from race.models import RaceData
 
 
 @admin.register(Participant)
@@ -29,21 +31,8 @@ class ParticipantAdmin(admin.ModelAdmin):
     readonly_fields = ("tg_chat_id",)
     actions = [
         'send_start_message_to_participants',
-        'send_winner_message_to_participants',
         'send_custom_message_to_participants',
     ]
-
-    @admin.action(description='Отправить сообщение о победе выбранным амигос')
-    def send_winner_message_to_participants(self, request, queryset):
-        chat_ids = queryset.values_list('tg_chat_id', flat=True)
-        try:
-            message = CustomMessage.objects.first().winner_message
-            TelegramApiRequest(chat_ids=chat_ids, message=message).send_message_to_users()
-            messages.add_message(request, messages.SUCCESS, f'Собщение отправлено')
-        except AttributeError:
-            messages.add_message(request, messages.ERROR, f'Заполните поле в админке')
-            url = reverse('admin:bot_settings_custommessage_change')
-            return redirect(url)
 
     @admin.action(description='Отправить сообщение о старте всем амигос')
     def send_start_message_to_participants(self, request, queryset):
@@ -54,6 +43,10 @@ class ParticipantAdmin(admin.ModelAdmin):
             TelegramApiRequest(
                 chat_ids=chat_ids, message=message, keyboard=keyboard
             ).send_message_to_users_with_keyboard()
+            race_data = RaceData.objects.first()
+            race_data.time_of_start = datetime.now()
+            race_data.is_started = True
+            race_data.save()
             messages.add_message(request, messages.SUCCESS, f'Собщение отправлено всем участникам')
         except AttributeError:
             messages.add_message(request, messages.ERROR, f'Заполните поле в админке')
