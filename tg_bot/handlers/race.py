@@ -180,15 +180,17 @@ async def on_intermediate_start_point_get_photo(message: types.Message, state: F
 
 
 @dp.callback_query_handler(state=RaceStates.intermediate_finish, text='got_the_finish_point')
-async def get_intermediate_finish_point(call: types.CallbackQuery) -> None:
+async def get_intermediate_finish_point(call: types.CallbackQuery, state: FSMContext) -> None:
 
     await call.answer(cache_time=1)
     await call.message.delete_reply_markup()
+    point_id = await state.get_data()
 
     await call.message.answer(
         'Отправь своё местоположение 🗺',
         reply_markup=GeoPointsKeyboards.location_button(),
     )
+    await state.set_data(data={'point_id': point_id.get('point_id')})
 
 
 @dp.message_handler(state=RaceStates.intermediate_finish, content_types=types.ContentType.LOCATION)
@@ -221,7 +223,6 @@ async def on_intermediate_finish_point_get_location(
         points = data_from_db.get('points')
         points.append(int(point_id))
         await patch_race_instance_in_db(tg_chat_id=tg_chat_id, points=points)
-        print('патс on_intermediate_finish_point_get_location')
         await message.answer(on_point)
         await state.reset_data()
     else:
@@ -281,7 +282,7 @@ async def check_location_on_the_finish_point(message: types.Message):
         user_latitude=user_latitude,
         user_longitude=user_longitude,
         point_longitude=float(f'{finish_longitude:.5f}'),
-        point_latitude=float(f'{finish_latitude:.5f}f'),
+        point_latitude=float(f'{finish_latitude:.5f}'),
     )
     if on_point:
         await message.answer(on_point_message)

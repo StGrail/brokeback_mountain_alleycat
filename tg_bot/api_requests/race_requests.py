@@ -56,7 +56,6 @@ async def get_geo_points_exclude(points_list: list) -> Union[dict, None]:
             resp_status = resp.status
             if resp_status == status.HTTP_200_OK:
                 data = await resp.json()
-                print('data', data)
                 return data
             return None
 
@@ -73,7 +72,6 @@ async def post_race_instance_in_db(**kwargs) -> bool:
             url, data=data, auth=BasicAuth(API_AUTH_USER, API_AUTH_PASSWORD)
         ) as resp:
             resp_status = resp.status
-            print(await resp.json())
             if resp_status == status.HTTP_200_OK:
                 return True
             return False
@@ -91,7 +89,6 @@ async def patch_race_instance_in_db(tg_chat_id: int, **kwargs) -> bool:
             url, data=data, auth=BasicAuth(API_AUTH_USER, API_AUTH_PASSWORD)
         ) as resp:
             resp_status = resp.status
-            print(await resp.json())
             if resp_status == status.HTTP_200_OK:
                 return True
             return False
