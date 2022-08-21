@@ -221,7 +221,7 @@ async def on_intermediate_finish_point_get_location(
 
         data_from_db = await get_race_instance_in_db(tg_chat_id=tg_chat_id)
         points = data_from_db.get('points')
-        points.append(int(point_id))
+        points.append(point_id)
         await patch_race_instance_in_db(tg_chat_id=tg_chat_id, points=points)
         await message.answer(on_point)
         await state.reset_data()
@@ -233,9 +233,7 @@ async def on_intermediate_finish_point_get_location(
 
 
 # Получаем фото на промежуточно финише и отдаём следуюзие точки
-@dp.message_handler(
-    state=RaceStates.intermediate_finish, content_types=types.ContentType.PHOTO
-)
+@dp.message_handler(state=RaceStates.intermediate_finish, content_types=types.ContentType.PHOTO)
 async def on_intermediate_finish_point_get_photo(message: types.Message, state: FSMContext):
 
     await state.reset_state(with_data=True)
@@ -247,8 +245,11 @@ async def on_intermediate_finish_point_get_photo(message: types.Message, state: 
     total_points = await get_all_geo_points()
 
     if len(user_points) == len(total_points) + 1:
+        finish_geo_data = await get_finish_geo_point()
         await message.answer(
-            'Отлично, все точки закончились, гони на финиш, пришли локацию, когда доедешь',
+            'Отлично, все точки закончились, гони на финиш NUW STORE.\n\nКоординаты:\n'
+            f'<code>{finish_geo_data.get("longitude_start")} {finish_geo_data.get("latitude_start")}</code>.\n\n'
+            f'Пришли локацию, когда доедешь 🗺',
             reply_markup=GeoPointsKeyboards.location_button(),
         )
         await state.reset_state(with_data=True)
@@ -303,9 +304,7 @@ async def check_location_on_the_finish_point(message: types.Message, state: FSMC
     tg_chat_id = message.from_user.id
     user_race_data = await get_race_instance_in_db(tg_chat_id=tg_chat_id)
     user_points = user_race_data.get('points')
-    point_data = await get_start_geo_points()
-    finish_longitude = point_data.get('longitude_start')
-    finish_latitude = point_data.get('latitude_start')
+    point_data = await get_finish_geo_point()
     point_id = point_data.get('id')
 
     time_finish = datetime.now()
@@ -316,11 +315,21 @@ async def check_location_on_the_finish_point(message: types.Message, state: FSMC
     total_time = datetime.strptime(str(total_time_delta), "%H:%M:%S.%f")
 
     await message.answer(end_race)
-    data = {
-        'is_finished': True,
-        'time_of_finish': time_finish,
-        'time_of_race': total_time,
-        'points': user_points.append(int(point_id)),
-    }
-    await patch_race_instance_in_db(tg_chat_id=tg_chat_id, data=data)
+
+    points = user_points.append(point_id)
+    done = await patch_race_instance_in_db(
+        tg_chat_id=tg_chat_id,
+        is_finished=True,
+        time_of_finish=time_finish,
+        total_time=total_time,
+        points=points,
+    )
+    if not done:
+        await patch_race_instance_in_db(
+            tg_chat_id=tg_chat_id,
+            is_finished=True,
+            time_of_finish=time_finish,
+            total_time=total_time,
+        )
+
     await state.reset_state(with_data=True)

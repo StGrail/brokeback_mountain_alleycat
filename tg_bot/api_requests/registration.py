@@ -51,7 +51,7 @@ async def get_participant_data_in_db(tg_chat_id: int) -> Union[dict, None]:
     :return: словарь с данными пользователя
     :return: None, если данных нет
     """
-    url = API_URL + f'participants/{tg_chat_id}'
+    url = API_URL + f'participants/{tg_chat_id}/'
     async with aiohttp.ClientSession() as session:
         async with session.get(url, auth=BasicAuth(API_AUTH_USER, API_AUTH_PASSWORD)) as resp:
             resp_status = resp.status

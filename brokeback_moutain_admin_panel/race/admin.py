@@ -63,13 +63,13 @@ class RaceAdmin(admin.ModelAdmin):
         "is_finished",
     )
     actions = [
-        'send_start_message_to_participants',
+        'send_winner_message_to_participants',
     ]
     ordering = ("-time_of_race",)
 
     @admin.action(description='Отправить сообщение о победе выбранным амигос')
     def send_winner_message_to_participants(self, request, queryset):
-        chat_ids = queryset.values_list('tg_chat_id', flat=True)
+        chat_ids = queryset.values_list('participant__tg_chat_id', flat=True)
         try:
             message = CustomMessage.objects.first().winner_message
             TelegramApiRequest(chat_ids=chat_ids, message=message).send_message_to_users()
