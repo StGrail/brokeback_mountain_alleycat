@@ -321,5 +321,5 @@ async def check_location_on_the_finish_point(message: types.Message, state: FSMC
         'time_of_race': total_time,
         'points': user_points.append(int(point_id)),
     }
-    await patch_race_instance_in_db(tg_chat_id=tg_chat_id, participant=tg_chat_id, data=data)
+    await patch_race_instance_in_db(tg_chat_id=tg_chat_id, data=data)
     await state.reset_state(with_data=True)
