@@ -13,8 +13,16 @@ async def count_unfinished_points(tg_chat_id: int) -> int:
 def check_geo_position(
     user_latitude: float, user_longitude: float, point_longitude: float, point_latitude: float
 ) -> bool:
-    """Проверяем. что геоданные пользователя в радиусе 150м от точки"""
+    """Проверяем, что геоданные пользователя в радиусе 150м от точки"""
 
     if (user_latitude - point_longitude) ** 2 + (user_longitude - point_latitude) ** 2 <= R**2:
         return True
     return False
+
+
+async def get_text_for_remaining_points(points: dict) -> str:
+    """Генерация текста для оставшихся точек"""
+
+    point_names_text = '\n'.join([point.get('name') for point in points])
+    message_text = f'Еще {len(points)} точек:\n\n{point_names_text}\n\n' f'Выбери, куда поедешь'
+    return message_text

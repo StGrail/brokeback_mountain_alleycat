@@ -31,7 +31,7 @@ DEBUG = os.getenv("DEBUG", False)
 ALLOWED_HOSTS = ["*"]
 
 TG_API = 'https://api.telegram.org/'
-BOT_TOKEN = os.getenv("BOT_TOKEN") if not DEBUG else os.getenv("BOT_TOKEN_DEV")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 # Application definition
@@ -97,6 +97,18 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('POSTGRES_NAME'),
+#         'USER': os.environ.get('POSTGRES_USER'),
+#         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+#         'HOST': 'db',
+#         'PORT': 5432,
+#     }
+# }
 
 
 # Password validation

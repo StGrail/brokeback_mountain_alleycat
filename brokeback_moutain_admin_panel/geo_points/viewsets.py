@@ -5,9 +5,12 @@ from rest_framework.response import Response
 from geo_points import contstans
 from geo_points.models import GeoPoints
 from geo_points.serializers import GeoPointsSerializer
+from race.models import Race
 
 
 class GeoPointsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Получение гео точек из бд"""
+
     queryset = GeoPoints.objects.all()
     serializer_class = GeoPointsSerializer
 
@@ -21,7 +24,7 @@ class GeoPointsViewSet(viewsets.ReadOnlyModelViewSet):
         response = {
             'longitude_start': data.get('longitude_start'),
             'latitude_start': data.get('latitude_start'),
-            'id': data.get('id')
+            'id': data.get('id'),
         }
 
         return Response(response, status=status.HTTP_200_OK)
@@ -41,18 +44,6 @@ class GeoPointsViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    @action(methods=['GET'], detail=False, description='Получение финишных координат')
-    def exclude(self, request, *args, **kwargs):
-        points_list = request.data.get('exclude')
-        if points_list:
-            qs = self.queryset.exclude(id__in=points_list,).exclude(
-                is_start_or_finish_point__in=(contstans.IS_FINISH, contstans.IS_START),
-            )
-        else:
-            qs = self.queryset
-        serializer = self.get_serializer(qs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def get_queryset(self):
         if self.action in ['list']:
             queryset = self.queryset.exclude(
@@ -61,3 +52,24 @@ class GeoPointsViewSet(viewsets.ReadOnlyModelViewSet):
             return queryset
         else:
             return self.queryset
+
+
+class PointsExcludeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Получение координат промежуточных точек"""
+
+    queryset = GeoPoints.objects.all()
+    serializer_class = GeoPointsSerializer
+
+    def list(self, request, *args, **kwargs):
+        tg_chat_id = request.query_params.get('tg_chat_id', False)
+        if tg_chat_id:
+            points = Race.objects.filter(participant__tg_chat_id=tg_chat_id).values('points')
+            data = GeoPoints.objects.exclude(id__in=points).exclude(
+                is_start_or_finish_point__in=(contstans.IS_FINISH, contstans.IS_START)
+            )
+            serializer = self.get_serializer(data, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        response = Response(data=dict())
+        response.data['results'] = super().list(request, args, kwargs).data
+        return response

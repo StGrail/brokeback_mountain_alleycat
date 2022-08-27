@@ -6,6 +6,8 @@ from race.serializers import RaceUpdateSerializer, RaceSerializer, RaceDataSeria
 
 
 class RaceViewSet(viewsets.ModelViewSet):
+    """Обновление инстанса гонки"""
+
     queryset = Race.objects.all()
     lookup_field = 'participant__tg_chat_id'
 
@@ -21,5 +23,7 @@ class RaceViewSet(viewsets.ModelViewSet):
 
 
 class RaceDataViewSet(viewsets.ReadOnlyModelViewSet):
+    """Получение всех данных по гонке"""
+
     queryset = RaceData.objects.all()
     serializer_class = RaceDataSerializer

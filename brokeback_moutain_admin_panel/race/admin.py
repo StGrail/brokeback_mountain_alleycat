@@ -42,6 +42,7 @@ class RaceAdmin(admin.ModelAdmin):
         "time_of_start",
         "time_of_finish",
         "time_of_race",
+        # "participant__category",
         # "place",
         # "place_in_category",
     )

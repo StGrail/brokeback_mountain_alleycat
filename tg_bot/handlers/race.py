@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from aiogram import types
-from aiogram.dispatcher import FSMContext, filters
+from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 
 from api_requests.geo_points import (
@@ -21,7 +21,7 @@ from config.utils import dp
 from keyboards.geo_points import GeoPointsKeyboards
 
 
-from services.race_services import check_geo_position
+from services.race_services import check_geo_position, get_text_for_remaining_points
 from states.race_states import RaceStates
 
 
@@ -78,9 +78,10 @@ async def check_location_on_the_start_point(message: types.Message):
         )
 
 
-# выбор всех точек на стартовой локации, после получения фото
 @dp.message_handler(state=RaceStates.choose_all_points, content_types=types.ContentType.PHOTO)
 async def choose_all_points(message: types.Message, state: FSMContext):
+    """Выбор всех точек на стартовой локации, после получения фото"""
+
     points = await get_all_geo_points()
     point_names_text = '\n'.join([point.get('name') for point in points])
     await message.answer(
@@ -94,6 +95,7 @@ async def choose_all_points(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(state=RaceStates.choose_next_point, regexp=r'[0-9]')
 async def to_intermediate_start_point(call: types.CallbackQuery, state: FSMContext) -> None:
+    """Запрос в бд на получение промежуточного старта и отдаю данные"""
 
     point_id = int(call.data)
 
@@ -109,7 +111,6 @@ async def to_intermediate_start_point(call: types.CallbackQuery, state: FSMConte
     await state.set_data(data={'point_id': point_id})
 
 
-# запрос локации на промежуточном старте
 @dp.callback_query_handler(state=RaceStates.intermediate_start, text='got_the_start_point')
 async def on_intermediate_start_point(call: types.CallbackQuery) -> None:
     """Проверяем, что участник действительно на промежуточном старте, запрос локации и проверка"""
@@ -160,16 +161,16 @@ async def on_intermediate_start_point_get_location(
         )
 
 
-# Получаем фото на промежуточно старте и отдаём локацию промежуточного финиша
 @dp.message_handler(state=RaceStates.intermediate_start, content_types=types.ContentType.PHOTO)
 async def on_intermediate_start_point_get_photo(message: types.Message, state: FSMContext):
+    """Получаем фото на промежуточно старте и отдаём локацию промежуточного финиша"""
 
     state_data = await state.get_data()
     point_id = state_data.get('point_id')
 
     intermediate_start_point_data = await get_intermediate_start_point_data(point_id=point_id)
-    start_longitude = intermediate_start_point_data.get('longitude_start')
-    start_latitude = intermediate_start_point_data.get('latitude_start')
+    start_longitude = intermediate_start_point_data.get('longitude_finish')
+    start_latitude = intermediate_start_point_data.get('latitude_finish')
     await message.answer(
         f'Финиш участка расположен по этим координатам <code>{start_longitude},{start_latitude}</code>.\n\n'
         f'Нажми на кнопку, когда будешь на месте',
@@ -181,6 +182,7 @@ async def on_intermediate_start_point_get_photo(message: types.Message, state: F
 
 @dp.callback_query_handler(state=RaceStates.intermediate_finish, text='got_the_finish_point')
 async def get_intermediate_finish_point(call: types.CallbackQuery, state: FSMContext) -> None:
+    """Запрос местоположения на промежуточном финише"""
 
     await call.answer(cache_time=1)
     await call.message.delete_reply_markup()
@@ -232,16 +234,16 @@ async def on_intermediate_finish_point_get_location(
         )
 
 
-# Получаем фото на промежуточно финише и отдаём следуюзие точки
 @dp.message_handler(state=RaceStates.intermediate_finish, content_types=types.ContentType.PHOTO)
 async def on_intermediate_finish_point_get_photo(message: types.Message, state: FSMContext):
+    """Получаем фото на промежуточно финише и отдаём следующие точки"""
 
     await state.reset_state(with_data=True)
     tg_chat_id = message.from_user.id
 
     user_race_data = await get_race_instance_in_db(tg_chat_id=tg_chat_id)
     user_points = user_race_data.get('points')
-    any_points_for_user = await get_geo_points_exclude(points_list=user_points)
+    any_points_for_user = await get_geo_points_exclude(tg_chat_id=tg_chat_id)
     total_points = await get_all_geo_points()
 
     if len(user_points) == len(total_points) + 1:
@@ -255,22 +257,22 @@ async def on_intermediate_finish_point_get_photo(message: types.Message, state: 
         await state.reset_state(with_data=True)
         await RaceStates.check_you_are_on_the_finish.set()
     else:
-        points = any_points_for_user
-        point_names_text = '\n'.join([point.get('name') for point in points])
+        message_text = await get_text_for_remaining_points(points=any_points_for_user)
         await message.answer(
-            f'Еще {len(points)} точек:\n\n{point_names_text}\n\n' f'Выбери, куда поедешь',
-            reply_markup=GeoPointsKeyboards(kb_data=points).point_kb(),
+            message_text,
+            reply_markup=GeoPointsKeyboards(kb_data=any_points_for_user).point_kb(),
         )
         await state.reset_state(with_data=True)
         await state.reset_data()
         await RaceStates.choose_next_point.set()
 
 
-# прием локации на основном финише
 @dp.message_handler(
     state=RaceStates.check_you_are_on_the_finish, content_types=types.ContentType.LOCATION
 )
 async def check_location_on_the_finish_point(message: types.Message):
+    """Прием локации на основном финише"""
+
     on_point_message = 'Ты на месте!\nДля подтверждения, отправь селфи 📷'
     user_latitude = float(f'{message.location["latitude"]:.5f}')
     user_longitude = float(f'{message.location["longitude"]:.5f}')
@@ -294,11 +296,12 @@ async def check_location_on_the_finish_point(message: types.Message):
         )
 
 
-# прием фото на основном финише
 @dp.message_handler(
     state=RaceStates.check_you_are_on_the_finish, content_types=types.ContentType.PHOTO
 )
 async def check_location_on_the_finish_point(message: types.Message, state: FSMContext):
+    """Прием фото на основном финише"""
+
     end_race = 'Поздравляю, ты на финише. Выпей пивка, ковбой.'
 
     tg_chat_id = message.from_user.id
