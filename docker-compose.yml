@@ -1,0 +1,66 @@
+version: '3.9'
+
+x-backend_environment: &backend_environment
+  environment:
+    - DEBUG
+    - SECRET_KEY
+    - BOT_TOKEN
+    - API_URL
+    - API_AUTH_USER
+    - API_AUTH_PASSWORD
+    - POSTGRES_DB
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+    - ADMIN_NAME
+    - ADMIN_PASSWORD
+
+x-bot_environment: &bot_environment
+  environment:
+    - DEBUG
+    - BOT_TOKEN
+    - API_URL
+    - API_AUTH_USER
+    - API_AUTH_PASSWORD
+
+services:
+  db:
+    image: postgres
+    restart: on-failure
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+
+
+  backend:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: admin_panel.Dockerfile
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    restart:
+      on-failure
+    ports:
+    - "8000:8000"
+    depends_on:
+    - db
+    <<: *backend_environment
+    volumes:
+      - ./admin_panel:/admin_panel
+
+  tgbot:
+    platform: linux/amd64
+    container_name: tg-bot
+    build:
+      context: .
+      dockerfile: tg_bot.Dockerfile
+    command:
+      python main.py
+    restart:
+      on-failure
+    depends_on:
+      - db
+      - backend
+    <<: *bot_environment
